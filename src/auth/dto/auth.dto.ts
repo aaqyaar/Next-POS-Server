@@ -27,4 +27,8 @@ export class AuthSignUpDto {
   @IsString()
   @IsNotEmpty()
   password: string;
+
+  @IsString()
+  @IsNotEmpty()
+  roleId: string;
 }
