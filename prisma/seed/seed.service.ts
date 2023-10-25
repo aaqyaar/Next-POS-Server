@@ -130,14 +130,14 @@ export class SeedService {
           password: hashed,
           name: 'Abdi Zamed',
           roleId: adminRole.id,
-          phone: '618977249',
+          phone: '252618977249',
         },
         {
           email: 'cashier@gmail.com',
           password: hashed,
           name: 'Cashier',
           roleId: cashierRole.id,
-          phone: '1234567890',
+          phone: '252618977240',
         },
       ],
     });
