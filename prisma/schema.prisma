@@ -32,12 +32,17 @@ model Product {
   Vendor            Vendor?             @relation(fields: [vendorId], references: [id])
   vendorId          String?
   PurchaseOrderItem PurchaseOrderItem[]
+
+  companyId String // Add companyId field to associate with a specific company
+  company   Company @relation(fields: [companyId], references: [id])
 }
 
 model Category {
-  id       String    @id @default(cuid())
-  name     String
-  products Product[]
+  id        String    @id @default(cuid())
+  name      String
+  products  Product[]
+  companyId String // Add companyId field to associate with a specific company
+  company   Company   @relation(fields: [companyId], references: [id])
 }
 
 model Sale {
@@ -48,18 +53,22 @@ model Sale {
   cashierId    String
   cashier      User          @relation(fields: [cashierId], references: [id])
   transactions Transaction[]
+  companyId    String // Add companyId field to associate with a specific company
+  company      Company       @relation(fields: [companyId], references: [id])
 }
 
 model SaleItem {
-  id        String  @id @default(cuid())
-  quantity  Int
-  price     Float
-  sale      Sale    @relation(fields: [saleId], references: [id])
-  status Status @default(PENDING)
+  id            String        @id @default(cuid())
+  quantity      Int
+  price         Float
+  sale          Sale          @relation(fields: [saleId], references: [id])
+  status        Status        @default(PENDING)
   paymentMethod PaymentMethod @default(EVC_PLUS)
-  saleId    String
-  product   Product @relation(fields: [productId], references: [id])
-  productId String
+  saleId        String
+  product       Product       @relation(fields: [productId], references: [id])
+  productId     String
+  companyId     String // Add companyId field to associate with a specific company
+  company       Company       @relation(fields: [companyId], references: [id])
 }
 
 model User {
@@ -73,6 +82,7 @@ model User {
 
   Session Session[]
   sales   Sale[]
+  Company Company[]
 }
 
 model Role {
@@ -80,6 +90,8 @@ model Role {
   name        RolesEnum    @default(CASHIER)
   permissions Permission[]
   User        User[]
+  companyId   String // Add companyId field to associate with a specific company
+  company     Company      @relation(fields: [companyId], references: [id])
 }
 
 enum RolesEnum {
@@ -97,6 +109,8 @@ model Account {
   type         AccountType
   balance      Float         @default(0)
   transactions Transaction[]
+  companyId    String // Add companyId field to associate with a specific company
+  company      Company       @relation(fields: [companyId], references: [id])
 }
 
 enum AccountType {
@@ -106,7 +120,6 @@ enum AccountType {
   REVENUE
   EXPENSE
 }
-
 
 enum PaymentMethod {
   PREMIER_BANK
@@ -133,6 +146,8 @@ model Transaction {
   PurchaseOrder   PurchaseOrder?  @relation(fields: [purchaseOrderId], references: [id])
   purchaseOrderId String?
   journalEntry    JournalEntry[]
+  companyId       String // Add companyId field to associate with a specific company
+  company         Company         @relation(fields: [companyId], references: [id])
 }
 
 enum TransactionType {
@@ -146,6 +161,8 @@ model Vendor {
   contactInfo    String?
   products       Product[]
   purchaseOrders PurchaseOrder[]
+  companyId      String // Add companyId field to associate with a specific company
+  company        Company         @relation(fields: [companyId], references: [id])
 }
 
 model PurchaseOrder {
@@ -157,6 +174,8 @@ model PurchaseOrder {
   received     Boolean             @default(false)
   orderItems   PurchaseOrderItem[]
   transactions Transaction[]
+  companyId    String // Add companyId field to associate with a specific company
+  company      Company             @relation(fields: [companyId], references: [id])
 }
 
 model PurchaseOrderItem {
@@ -167,6 +186,8 @@ model PurchaseOrderItem {
   purchaseOrderId String
   product         Product       @relation(fields: [productId], references: [id])
   productId       String
+  companyId       String // Add companyId field to associate with a specific company
+  company         Company       @relation(fields: [companyId], references: [id])
 }
 
 model JournalEntry {
@@ -174,13 +195,17 @@ model JournalEntry {
   date         DateTime      @default(now())
   description  String
   transactions Transaction[]
+  companyId    String // Add companyId field to associate with a specific company
+  company      Company       @relation(fields: [companyId], references: [id])
 }
 
 model Permission {
-  id      Int    @id @default(autoincrement())
-  action  Action
-  subject String
-  roles   Role[]
+  id        Int     @id @default(autoincrement())
+  action    Action
+  subject   String
+  roles     Role[]
+  companyId String // Add companyId field to associate with a specific company
+  company   Company @relation(fields: [companyId], references: [id])
 }
 
 enum Action {
@@ -195,4 +220,30 @@ enum Status {
   PENDING
   COMPLETED
   CANCELLED
+}
+
+model Company {
+  id       String @id @default(cuid())
+  name     String
+  address  String
+  phone    String
+  email    String
+  logo     String
+  currency String @default("USD")
+
+  user              User                @relation(fields: [userId], references: [id])
+  userId            String              @unique
+  
+  Product           Product[]
+  Category          Category[]
+  Sale              Sale[]
+  SaleItem          SaleItem[]
+  Role              Role[]
+  Account           Account[]
+  Transaction       Transaction[]
+  Vendor            Vendor[]
+  PurchaseOrder     PurchaseOrder[]
+  PurchaseOrderItem PurchaseOrderItem[]
+  JournalEntry      JournalEntry[]
+  Permission        Permission[]
 }
