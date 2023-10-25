@@ -10,21 +10,189 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
+model Session {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  refreshToken String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Product {
+  id                String              @id @default(cuid())
+  name              String
+  description       String?
+  price             Float
+  category          Category            @relation(fields: [categoryId], references: [id])
+  categoryId        String
+  stock             Int
+  sales             SaleItem[]
+  barcode           String?             @unique
+  Vendor            Vendor?             @relation(fields: [vendorId], references: [id])
+  vendorId          String?
+  PurchaseOrderItem PurchaseOrderItem[]
+}
+
+model Category {
   id       String    @id @default(cuid())
   name     String
-  email    String    @unique
-  phone    String    @unique
+  products Product[]
+}
+
+model Sale {
+  id           String        @id @default(cuid())
+  date         DateTime      @default(now())
+  total        Float
+  saleItems    SaleItem[]
+  cashierId    String
+  cashier      User          @relation(fields: [cashierId], references: [id])
+  transactions Transaction[]
+}
+
+model SaleItem {
+  id        String  @id @default(cuid())
+  quantity  Int
+  price     Float
+  sale      Sale    @relation(fields: [saleId], references: [id])
+  status Status @default(PENDING)
+  paymentMethod PaymentMethod @default(EVC_PLUS)
+  saleId    String
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+}
+
+model User {
+  id       String @id @default(cuid())
+  name     String
+  email    String @unique
+  phone    String @unique
   password String
-  Session  Session[]
+  role     Role   @relation(fields: [roleId], references: [id])
+  roleId   String
+
+  Session Session[]
+  sales   Sale[]
 }
 
-model Session {
-  id        String   @id @default(cuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  refreshToken String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+model Role {
+  id          String       @id @default(cuid())
+  name        RolesEnum    @default(CASHIER)
+  permissions Permission[]
+  User        User[]
 }
 
+enum RolesEnum {
+  CASHIER
+  MANAGER
+  ADMIN
+  SUPER_ADMIN
+  ACCOUNTANT
+}
+
+// Accounting Models
+model Account {
+  id           String        @id @default(cuid())
+  name         String
+  type         AccountType
+  balance      Float         @default(0)
+  transactions Transaction[]
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+
+enum PaymentMethod {
+  PREMIER_BANK
+  IBS_BANK
+  SOM_BANK
+  SALAAM_BANK
+  DAHABSHIIL
+  EVC_PLUS
+  E_DAHAB
+  E_BESA
+  ZAAD
+  SAHAL
+}
+
+model Transaction {
+  id              String          @id @default(cuid())
+  date            DateTime        @default(now())
+  amount          Float
+  type            TransactionType
+  accountId       String
+  account         Account         @relation(fields: [accountId], references: [id])
+  saleId          String?
+  sale            Sale?           @relation(fields: [saleId], references: [id])
+  PurchaseOrder   PurchaseOrder?  @relation(fields: [purchaseOrderId], references: [id])
+  purchaseOrderId String?
+  journalEntry    JournalEntry[]
+}
+
+enum TransactionType {
+  DEBIT
+  CREDIT
+}
+
+model Vendor {
+  id             String          @id @default(cuid())
+  name           String
+  contactInfo    String?
+  products       Product[]
+  purchaseOrders PurchaseOrder[]
+}
+
+model PurchaseOrder {
+  id           String              @id @default(cuid())
+  date         DateTime            @default(now())
+  total        Float
+  vendorId     String
+  vendor       Vendor              @relation(fields: [vendorId], references: [id])
+  received     Boolean             @default(false)
+  orderItems   PurchaseOrderItem[]
+  transactions Transaction[]
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  quantity        Int
+  price           Float
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  purchaseOrderId String
+  product         Product       @relation(fields: [productId], references: [id])
+  productId       String
+}
+
+model JournalEntry {
+  id           Int           @id @default(autoincrement())
+  date         DateTime      @default(now())
+  description  String
+  transactions Transaction[]
+}
+
+model Permission {
+  id      Int    @id @default(autoincrement())
+  action  Action
+  subject String
+  roles   Role[]
+}
+
+enum Action {
+  CREATE
+  READ
+  UPDATE
+  DELETE
+  MANAGE
+}
+
+enum Status {
+  PENDING
+  COMPLETED
+  CANCELLED
+}
